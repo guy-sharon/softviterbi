@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "softviterbi"
+version = "0.1.0"
+description = "Soft viterbi decoder Python wrapper"
+requires-python = ">=3.7"
+authors = [{ name = "Guy Sharon", email = "g.sharon@proton.me" }]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+softviterbi = ["libsoftviterbi.so"]

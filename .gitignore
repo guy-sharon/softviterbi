@@ -1,0 +1,9 @@
+softviterbi_unittest*
+.vscode
+*pycache*
+*build*
+*venv*
+*.so
+*.dll
+*.exe
+*.whl
