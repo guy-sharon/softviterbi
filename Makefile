@@ -10,6 +10,7 @@ endif
 TARGET = softviterbi
 PYTHON = python3
 WHEEL_TEST_ENV = wheel_test_venv
+UNITTEST_VENV = tests/venv
 
 ifeq ($(OS),Windows_NT)
 	SHELL := cmd.exe
@@ -19,6 +20,7 @@ ifeq ($(OS),Windows_NT)
 	DEVNULL = nul
 	LIBRARY_TARGET = $(TARGET).dll
 	ACTIVATE_TEST_VENV = .\$(WHEEL_TEST_ENV)\Scripts\activate
+	ACTIVATE_UNITTEST_GENERATION_VENV = .\$(UNITTEST_VENV)\Scripts\activate
 	EXE = .exe
 	SEP=\\
 	PYTHON := call $(shell where python3 2>nul || where py -3 2>nul || where python 2>nul || where py 2>nul)
@@ -30,16 +32,17 @@ else
 	LIBRARY_TARGET = lib$(TARGET).so
 	EXE =
 	ACTIVATE_TEST_VENV = . $(WHEEL_TEST_ENV)/bin/activate
+	ACTIVATE_UNITTEST_GENERATION_VENV = . $(UNITTEST_VENV)/bin/activate
 	SEP=/
 endif
 
 PYTHON_PACKAGE_DIR = python_package
-DIST_DIR = $(PYTHON_PACKAGE_DIR)$(SEP)dist
-BUILD_DIR = $(PYTHON_PACKAGE_DIR)$(SEP)build
-EGG_INFO_DIR = $(PYTHON_PACKAGE_DIR)$(SEP)$(TARGET).egg-info
 PYTHON_PACKAGE_LIB = $(PYTHON_PACKAGE_DIR)$(SEP)$(TARGET)$(SEP)$(LIBRARY_TARGET)
 SETUP_PY = $(PYTHON_PACKAGE_DIR)$(SEP)setup.py
 UNITTEST_TARGET = $(TARGET)_unittest$(EXE)
+
+BOLD_TEXT := \033[1m
+RESET_TEXT := \033[0m
 
 all: $(TARGET)
 
@@ -50,7 +53,9 @@ lib: main.c
 	$(CC) $(CFLAGS) -Wno-unused-function -shared -fPIC -DASLIB -o $(LIBRARY_TARGET) $^
 
 generate_unittest:
-	
+	-$(RMDIR) $(UNITTEST_VENV)
+	$(PYTHON) -m venv $(UNITTEST_VENV)
+	$(ACTIVATE_UNITTEST_GENERATION_VENV) && pip install -r tests/requirements.txt
 	$(PYTHON) tests/generate_unittest.py
 
 unittest:
@@ -59,24 +64,39 @@ unittest:
 test: unittest
 	./$(UNITTEST_TARGET)
 
-test_all: test test_python_pkg
-	@$(MAKE) -s clean >$(DEVNULL) 2>&1
-
 wheel: lib
 	$(COPY) $(LIBRARY_TARGET) $(PYTHON_PACKAGE_LIB)
 	$(PYTHON) -m pip show setuptools >$(DEVNULL) 2>&1 || $(PYTHON) -m pip install setuptools >$(DEVNULL)
-	$(PYTHON) $(SETUP_PY) bdist_wheel -d . >$(DEVNULL)
+	cd $(PYTHON_PACKAGE_DIR) && $(PYTHON) setup.py bdist_wheel -d . >$(DEVNULL)
 	$(RMDIR) build $(TARGET).egg-info
+	mv $(PYTHON_PACKAGE_DIR)/*.whl .
 	cd $(PYTHON_PACKAGE_DIR) && rm -rf dist build *.egg-info
 
 test_python_pkg: wheel
+	$(RMDIR) $(WHEEL_TEST_ENV)
 	$(PYTHON) -m venv $(WHEEL_TEST_ENV)
 	$(ACTIVATE_TEST_VENV) && \
 	$(PYTHON) -m pip install --find-links=. $(TARGET) --quiet && \
-	$(PYTHON) $(PYTHON_PACKAGE_DIR)$(SEP)example.py
-	$(RMDIR) $(WHEEL_TEST_ENV)
+	$(PYTHON) tests$(SEP)python_package_example.py
+
+test_all: test test_python_pkg
+	@$(MAKE) -s clean >$(DEVNULL) 2>&1
+
+
+help:
+	@echo "softviterbi make commands:"
+	@echo "\tmake\t\t\t\tmakes $(BOLD_TEXT)$(TARGET)$(RESET_TEXT) executable"
+	@echo "\tmake lib\t\t\tmakes $(BOLD_TEXT)$(LIBRARY_TARGET)$(RESET_TEXT)"
+	@echo "\tmake generate_unittest\t\tmakes $(BOLD_TEXT)unittest.c$(RESET_TEXT) (may take a few minutes)"
+	@echo "\tmake unittest\t\t\tcompiles $(BOLD_TEXT)unittest.c$(RESET_TEXT)"
+	@echo "\tmake test\t\t\truns $(BOLD_TEXT)$(UNITTEST_TARGET)$(RESET_TEXT)"
+	@echo "\tmake wheel\t\t\tmakes $(TARGET) python package's $(BOLD_TEXT)wheel file$(RESET_TEXT)"
+	@echo "\tmake test_python_pkg\t\ttests the python package"
+	@echo "\tmake test_all\t\t\truns all available tests"
+	@echo "\tmake clean\t\t\tcleans extra files"
+	@echo "\tmake help\t\t\tdisplays this message"
 
 clean:
 	-$(RM) $(TARGET) $(TARGET).exe $(TARGET)_unittest* $(LIBRARY_TARGET)
-	-$(RMDIR) $(DIST_DIR) $(BUILD_DIR) $(EGG_INFO_DIR) tests$(SEP)venv
+	-$(RMDIR) dist build *.egg-info tests$(SEP)venv $(WHEEL_TEST_ENV)
 	-$(RM) $(TARGET)*.whl $(LIBRARY_TARGET) $(PYTHON_PACKAGE_LIB)
