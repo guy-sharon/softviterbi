@@ -23,6 +23,7 @@ ifeq ($(OS),Windows_NT)
 	ACTIVATE_UNITTEST_GENERATION_VENV = .\$(UNITTEST_VENV)\Scripts\activate
 	EXE = .exe
 	SEP=\\
+	PYTHON_FROM_VENV = $(SEP)Scripts$(SEP)python$(EXE)
 	PYTHON := call $(shell where python3 2>nul || where py -3 2>nul || where python 2>nul || where py 2>nul)
 else
 	RM = rm -f
@@ -30,10 +31,11 @@ else
 	MOVE = mv
 	DEVNULL = /dev/null
 	LIBRARY_TARGET = lib$(TARGET).so
-	EXE =
 	ACTIVATE_TEST_VENV = . $(WHEEL_TEST_ENV)/bin/activate
 	ACTIVATE_UNITTEST_GENERATION_VENV = . $(UNITTEST_VENV)/bin/activate
+	EXE =
 	SEP=/
+	PYTHON_FROM_VENV = $(SEP)bin$(SEP)python$(EXE)
 endif
 
 PYTHON_PACKAGE_DIR = python_package
@@ -76,8 +78,8 @@ test_python_pkg: wheel
 	-$(RMDIR) $(WHEEL_TEST_ENV)
 	$(PYTHON) -m venv $(WHEEL_TEST_ENV)
 	$(ACTIVATE_TEST_VENV) && \
-	$(PYTHON) -m pip install --find-links=. $(TARGET) --quiet && \
-	$(PYTHON) tests$(SEP)python_package_example.py
+	$(WHEEL_TEST_ENV)$(PYTHON_FROM_VENV) -m pip install --find-links=. $(TARGET) && \
+	$(WHEEL_TEST_ENV)$(PYTHON_FROM_VENV) tests$(SEP)python_package_example.py
 
 test_all: test test_python_pkg
 	@$(MAKE) -s clean >$(DEVNULL) 2>&1
