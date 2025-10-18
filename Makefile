@@ -16,7 +16,7 @@ ifeq ($(OS),Windows_NT)
 	SHELL := cmd.exe
 	RM = del /Q
 	RMDIR = rmdir /S /Q
-	COPY = copy
+	MOVE = move /y
 	DEVNULL = nul
 	LIBRARY_TARGET = $(TARGET).dll
 	ACTIVATE_TEST_VENV = .\$(WHEEL_TEST_ENV)\Scripts\activate
@@ -27,7 +27,7 @@ ifeq ($(OS),Windows_NT)
 else
 	RM = rm -f
 	RMDIR = rm -rf
-	COPY = cp
+	MOVE = mv
 	DEVNULL = /dev/null
 	LIBRARY_TARGET = lib$(TARGET).so
 	EXE =
@@ -65,15 +65,15 @@ test: unittest
 	./$(UNITTEST_TARGET)
 
 wheel: lib
-	$(COPY) $(LIBRARY_TARGET) $(PYTHON_PACKAGE_LIB)
+	$(MOVE) $(LIBRARY_TARGET) $(PYTHON_PACKAGE_LIB)
 	$(PYTHON) -m pip show setuptools >$(DEVNULL) 2>&1 || $(PYTHON) -m pip install setuptools >$(DEVNULL)
 	cd $(PYTHON_PACKAGE_DIR) && $(PYTHON) setup.py bdist_wheel -d . >$(DEVNULL)
-	$(RMDIR) build $(TARGET).egg-info
-	mv $(PYTHON_PACKAGE_DIR)/*.whl .
+	-$(RMDIR) build $(TARGET).egg-info
+	$(MOVE) $(PYTHON_PACKAGE_DIR)$(SEP)*.whl .
 	cd $(PYTHON_PACKAGE_DIR) && rm -rf dist build *.egg-info
 
 test_python_pkg: wheel
-	$(RMDIR) $(WHEEL_TEST_ENV)
+	-$(RMDIR) $(WHEEL_TEST_ENV)
 	$(PYTHON) -m venv $(WHEEL_TEST_ENV)
 	$(ACTIVATE_TEST_VENV) && \
 	$(PYTHON) -m pip install --find-links=. $(TARGET) --quiet && \
@@ -100,3 +100,6 @@ clean:
 	-$(RM) $(TARGET) $(TARGET).exe $(TARGET)_unittest* $(LIBRARY_TARGET)
 	-$(RMDIR) dist build *.egg-info tests$(SEP)venv $(WHEEL_TEST_ENV)
 	-$(RM) $(TARGET)*.whl $(LIBRARY_TARGET) $(PYTHON_PACKAGE_LIB)
+	-$(RMDIR) $(PYTHON_PACKAGE_DIR)$(SEP)$(TARGET).egg-info
+	-$(RM) $(PYTHON_PACKAGE_DIR)$(SEP)*.whl 
+	-$(RMDIR) $(PYTHON_PACKAGE_DIR)$(SEP)$(TARGET)$(SEP)__pycache__

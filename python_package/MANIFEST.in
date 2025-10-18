@@ -1,1 +1,1 @@
-include softviterbi/libsoftviterbi.so
+include softviterbi/*softviterbi.*

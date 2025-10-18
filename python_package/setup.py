@@ -20,7 +20,6 @@ setup(
     url="https://github.com/guy-sharon/softviterbi",
     packages=find_packages(),
     include_package_data=True,
-    py_limited_api = True,
     zip_safe=False,
     distclass=BinaryDistribution,
     cmdclass={"bdist_wheel": bdist_wheel_override}
