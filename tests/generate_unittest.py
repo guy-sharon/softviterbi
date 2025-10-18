@@ -250,23 +250,25 @@ static double agg_runtime = 0;
     /* decode */\\
     char *decoded_str = decode(&codec, encoded_bits, strlen(encoded_str), NULL); \\
     double cpu_time_used = ((double) (clock() - start)) / CLOCKS_PER_SEC; \\
-    PRINT_RESULT(decoded_str, input_bits_str, cpu_time_used); \\
+    CHECK_RESULT(decoded_str, input_bits_str, cpu_time_used); \\
     \\
     }}
            
-#define PRINT_RESULT(res, __expected, cpu_time_used) \\
+#define CHECK_RESULT(res, __expected, cpu_time_used) \\
         agg_runtime += cpu_time_used; \\
         agg_runtime_cnt++; \\
         test_num++; \\
         if (res && strcmp(res, __expected) == 0) {{ \\
             printf("\\t\\033[0;32mTest #%d passed (%.2fs)\\033[0m\\n", test_num, cpu_time_used); \\
         }} \\
-        else if (res) {{ \\
-            printf("\\t\\033[0;31mTest #%d failed (%.2fs):\\n\\t\\tgot\\t\\t%s\\n\\t\\texpected\\t%s\\n\\033[0m", test_num, cpu_time_used, res, __expected); \\
-        }} \\
         else {{ \\
-            printf("\\t\\033[0;31mTest #%d failed (%.2fs):\\n\\t\\tgot\\t\\t%s\\n\\t\\texpected\\t%s\\n\\033[0m", test_num, cpu_time_used, "NULL", __expected); \\
-        }} \\
+            if (res) {{ \\
+                printf("\\t\\033[0;31mTest #%d failed (%.2fs):\\n\\t\\tgot\\t\\t%s\\n\\t\\texpected\\t%s\\n\\033[0m", test_num, cpu_time_used, res, __expected); \\
+            }} else {{ \\
+                printf("\\t\\033[0;31mTest #%d failed (%.2fs):\\n\\t\\tgot\\t\\t%s\\n\\t\\texpected\\t%s\\n\\033[0m", test_num, cpu_time_used, "NULL", __expected); \\
+            }} \\
+            return 1; \\
+        }}
             
 #define TEST(__functional, __polynomes, __num_polys, __bits, __expected) \\
     {{ \\
@@ -279,11 +281,11 @@ static double agg_runtime = 0;
         clock_t start = clock(); \\
         char *res = __functional; \\
         double cpu_time_used = ((double) (clock() - start)) / CLOCKS_PER_SEC; \\
-        PRINT_RESULT(res, __expected, cpu_time_used); \\
+        CHECK_RESULT(res, __expected, cpu_time_used); \\
         if (res) free(res); \\
     }}
 
-void unittest()
+int unittest()
 {{  
     // test encoder
     printf("\\nTesting encoder...\\n");
@@ -336,6 +338,7 @@ void unittest()
 
 #endif
 
+    return 0; // all passed
 }}
 
 #endif // __UNITTEST_C__

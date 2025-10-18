@@ -285,7 +285,7 @@ static void print_help() {
 int main(int argc, char *argv[]) {  
     if ( argc < 3 ) {
 #ifdef UNITTEST
-        unittest();
+        return unittest();
 #else
         print_help();
 #endif
