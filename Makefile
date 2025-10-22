@@ -79,7 +79,7 @@ test_python_pkg: wheel
 	$(PYTHON) -m venv $(WHEEL_TEST_ENV)
 	$(ACTIVATE_TEST_VENV) && \
 	$(WHEEL_TEST_ENV)$(PYTHON_FROM_VENV) -m pip install --find-links=. $(TARGET) && \
-	$(WHEEL_TEST_ENV)$(PYTHON_FROM_VENV) tests$(SEP)python_package_example.py
+	$(WHEEL_TEST_ENV)$(PYTHON_FROM_VENV) tests$(SEP)unittest.py
 
 test_all: test test_python_pkg
 	@$(MAKE) -s clean >$(DEVNULL) 2>&1

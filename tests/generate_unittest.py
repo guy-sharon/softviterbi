@@ -149,45 +149,71 @@ def cmd_pipeline(funcname, polynomes, bits_arr, expected):
     final_state = "NULL"
     if funcname == "decode" and randi(0,2) == 1:
         final_state = f'"{expected[-depth:]}"'
-    return f"""
+    c_cmd = f"""
     TEST_{funcname.upper()}(WRAP({{{polys}}}), {len(polynomes)}, \\
         WRAP({{{",".join([str(b) for b in bits_arr])}}}), \\
         "{expected}", {final_state});"""
+    py_cmd = f"""
+        {funcname}({list(map(int,polynomes))}, [{",".join([str(b) for b in bits_arr])}], '{expected}')"""
+    return c_cmd, py_cmd.strip()
         
 def build_unittest_c():
-    encodes, decodes = "", ""
-    decodes_14, decodes_18 = "", ""
-    decodes_19, decodes_20, decodes_21 = "", "", ""
-    encode_decodes = ""
-    decodes_24 = ""
+    c_encodes, c_decodes, py_encodes, py_decodes = "", "", "", ""
+    c_decodes_14, py_decodes_14 = "", ""
+    c_decodes_18, c_decodes_19, py_decodes_18, py_decodes_19 = "", "", "", ""
+    c_decodes_20, c_decodes_21, py_decodes_20, py_decodes_21 = "", "", "", ""
+    c_encode_decodes, py_encode_decodes = "", ""
+    c_decodes_24, py_decodes_24 = "", ""
     
     for _ in tqdm(range(10), desc="generating encode_decode pairs"):
         polynomes, bits_arr, _ = gen_dataset(max_depth=16, n=randi(50, 350), num_polys=None, depth=None)
-        encode_decodes = encode_decodes + cmd_pipeline("encode_decode", polynomes, bits_arr, "") + "\n"
+        c_cmd, py_cmd = cmd_pipeline("encode_decode", polynomes, bits_arr, "")
+        c_encode_decodes = c_encode_decodes + c_cmd + "\n"
+        py_encode_decodes = py_encode_decodes + py_cmd + "\n"
     
     for _ in tqdm(range(10), desc="generating long tests"):
-        encodes = encodes + encode_cmd(max_depth=16, n=randi(50, 350)) + "\n"
-        decodes = decodes + decode_cmd(max_depth=16, n=randi(50, 350)) + "\n"
+        c_cmd, py_cmd = encode_cmd(max_depth=16, n=randi(50, 350))
+        c_encodes = c_encodes + c_cmd + "\n"
+        py_encodes = py_encodes + py_cmd + "\n"
+        c_cmd, py_cmd = decode_cmd(max_depth=16, n=randi(50, 350))
+        c_decodes = c_decodes + c_cmd + "\n"
+        py_decodes = py_decodes + py_cmd + "\n"
         
     for _ in tqdm(range(10), desc="generating short tests"):
-        encodes = encodes + encode_cmd(max_depth=6, n=10) + "\n"
-        decodes = decodes + decode_cmd(max_depth=6, n=10) + "\n"
+        c_cmd, py_cmd = encode_cmd(max_depth=6, n=10)
+        c_encodes = c_encodes + c_cmd + "\n"
+        py_encodes = py_encodes + py_cmd + "\n"
+        c_cmd, py_cmd = decode_cmd(max_depth=6, n=10)
+        c_decodes = c_decodes + c_cmd + "\n"
+        py_decodes = py_decodes + py_cmd + "\n"
     
     for _ in tqdm(range(3), desc="generating tests with depth=14"):
-        decodes_14 = decodes_14 + decode_cmd(depth=14, n=500, num_polys=3) + "\n"
+        c_cmd, py_cmd = decode_cmd(depth=14, n=500, num_polys=3)
+        c_decodes_14 = c_decodes_14 + c_cmd + "\n"
+        py_decodes_14 = py_decodes_14 + py_cmd + "\n"
          
     for _ in tqdm(range(5), desc="generating tests with depth=18 and 19"):
-        decodes_18 = decodes_18 + decode_cmd(depth=18, n=350, num_polys=2) + "\n"
-        decodes_19 = decodes_19 + decode_cmd(depth=19, n=350, num_polys=2) + "\n"
+        c_cmd, py_cmd = decode_cmd(depth=18, n=350, num_polys=2)
+        c_decodes_18 = c_decodes_18 + c_cmd + "\n"
+        py_decodes_18 = py_decodes_18 + py_cmd + "\n"
+        c_cmd, py_cmd = encode_cmd(max_depth=6, n=10)
+        c_decodes_19 = c_decodes_19 + c_cmd + "\n"
+        py_decodes_19 = py_decodes_19 + py_cmd + "\n"
         
     for _ in tqdm(range(20), desc="generating tests with depth=20 and 21"):
-        decodes_20 = decodes_20 + decode_cmd(depth=20, n=350, num_polys=2) + "\n"
-        decodes_21 = decodes_21 + decode_cmd(depth=21, n=350, num_polys=2) + "\n"
+        c_cmd, py_cmd = decode_cmd(depth=20, n=350, num_polys=2) 
+        c_decodes_20 = c_decodes_20 + c_cmd + "\n"
+        py_decodes_20 = py_decodes_20 + py_cmd + "\n"
+        c_cmd, py_cmd = decode_cmd(depth=21, n=350, num_polys=2)
+        c_decodes_21 = c_decodes_21 + c_cmd + "\n"
+        py_decodes_21 = py_decodes_21 + py_cmd + "\n"
     
     for _ in tqdm(range(1), desc="generating tests with depth=24"):
-        decodes_24 = decodes_24 + decode_cmd(depth=24, n=350, num_polys=2) + "\n"
+        c_cmd, py_cmd = decode_cmd(depth=24, n=350, num_polys=2)
+        c_decodes_24 = c_decodes_24 + c_cmd + "\n"
+        py_decodes_24 = py_decodes_24 + py_cmd + "\n"
         
-    s = f"""
+    c = f"""
 #ifndef __UNITTEST_C__
 #define __UNITTEST_C__
 
@@ -199,11 +225,6 @@ def build_unittest_c():
 #include "time.h"
 #include "../main.h"
 
-//static bool test_decoding(char **)
-
-//extern unsigned int polynomes[16];
-//extern unsigned char num_polys;
-//extern unsigned int depth;
 extern unsigned int depth_mask;
 extern unsigned int p_last_bits;
 
@@ -289,51 +310,51 @@ int unittest()
 {{  
     // test encoder
     printf("\\nTesting encoder...\\n");
-    {encodes}
+    {c_encodes}
     PRINT_AVG_RUNTIME();
     
     // test decoder
     printf("\\nTesting decoder...\\n");
-    {decodes}
+    {c_decodes}
     PRINT_AVG_RUNTIME();
 
     // test encode + decode
     printf("\\nTesting encode + decode...\\n");
-    {encode_decodes}
+    {c_encode_decodes}
     PRINT_AVG_RUNTIME();
     
 #ifdef VALGRIND
 
     // test decoder (depth=14)
     printf("\\nTesting decoder (depth=14)...\\n");
-    {decodes_14}
+    {c_decodes_14}
     PRINT_AVG_RUNTIME();
     
 #else
     
     // test decoder (depth=18)
     printf("\\nTesting decoder (depth=18)...\\n");
-    {decodes_18}
+    {c_decodes_18}
     PRINT_AVG_RUNTIME();
 
     // test decoder (depth=19)
     printf("\\nTesting decoder (depth=19)...\\n");
-    {decodes_19}
+    {c_decodes_19}
     PRINT_AVG_RUNTIME();
     
     // test decoder (depth=20)
     printf("\\nTesting decoder (depth=20)...\\n");
-    {decodes_20}
+    {c_decodes_20}
     PRINT_AVG_RUNTIME();
     
     // test decoder (depth=21)
     printf("\\nTesting decoder (depth=21)...\\n");
-    {decodes_21}
+    {c_decodes_21}
     PRINT_AVG_RUNTIME();
     
     // test decoder (depth=24)
     printf("\\nTesting decoder (depth=24)...\\n");
-    {decodes_24}
+    {c_decodes_24}
     PRINT_AVG_RUNTIME();
 
 #endif
@@ -344,8 +365,120 @@ int unittest()
 #endif // __UNITTEST_C__
     """
     
+    py = f"""#!tests/venv/bin/python3
+
+from softviterbi import SoftViterbi
+import time
+
+test_num = 0
+agg_runtime_cnt = 0
+agg_runtime = 0
+t = None
+
+def tic():
+    global t
+    t = time.time()
+
+def toc():
+    global t
+    return time.time() - t
+
+def add_runtime(cpu_time_used):
+    global agg_runtime, agg_runtime_cnt
+    agg_runtime += cpu_time_used
+    agg_runtime_cnt += 1
+    
+def PRINT_AVG_RUNTIME():
+    global agg_runtime, agg_runtime_cnt
+    if agg_runtime_cnt > 0:
+        print(f"\\tAverage runtime: {{agg_runtime/agg_runtime_cnt:.2}}");
+        agg_runtime = 0
+        agg_runtime_cnt = 0
+
+def check_results(res, expected):
+    global test_num
+    cpu_time_used = toc()
+    if res == expected:
+        print(f"\\t\\033[0;32mTest #{{test_num}} passed ({{cpu_time_used:.2}})\\033[0m");
+    else:
+        print("\\t\\033[0;31mTest #{{test_num}} failed ({{cpu_time_used:.2}}):\\n\\t\\tgot\\t\\t{{res}}\\n\\t\\texpected\\t{{expected}}\\033[0m");
+  
+    test_num += 1
+    add_runtime(cpu_time_used)
+
+def encode(polynomes, bits, expected):
+    tic()
+    codec = SoftViterbi(polynomes)
+    encoded = codec.encode(bits)
+    check_results(encoded, list(map(int,expected)))
+
+def decode(polynomes, bits, expected):
+    tic()
+    codec = SoftViterbi(polynomes)
+    encoded = codec.decode(bits)
+    check_results(encoded, list(map(int,expected)))
+
+def encode_decode(polynomes, bits, *_):
+    tic()
+    codec = SoftViterbi(polynomes)
+    encoded = codec.encode(bits)
+    decoded = codec.decode([255*b for b in encoded]) 
+    check_results(decoded, bits)
+    
+# test encoder
+print("\\nTesting encoder...");
+{py_encodes}
+PRINT_AVG_RUNTIME();
+
+# test decoder
+print("\\nTesting decoder...");
+{py_decodes}
+PRINT_AVG_RUNTIME();
+
+# test encode + decode
+print("\\nTesting encode + decode...");
+{py_encode_decodes}
+PRINT_AVG_RUNTIME();
+
+# test decoder (depth=14)
+print("\\nTesting decoder (depth=14)...");
+{py_decodes_14}
+PRINT_AVG_RUNTIME();
+
+# test decoder (depth=18)
+print("\\nTesting decoder (depth=18)...");
+{py_decodes_18}
+PRINT_AVG_RUNTIME();
+
+# test decoder (depth=19)
+print("\\nTesting decoder (depth=19)...");
+{py_decodes_19}
+PRINT_AVG_RUNTIME();
+
+# test decoder (depth=20)
+print("\\nTesting decoder (depth=20)...");
+{py_decodes_20}
+PRINT_AVG_RUNTIME();
+
+# test decoder (depth=21)
+print("\\nTesting decoder (depth=21)...");
+{py_decodes_21}
+PRINT_AVG_RUNTIME();
+
+# test decoder (depth=24)
+print("\\nTesting decoder (depth=24)...");
+{py_decodes_24}
+PRINT_AVG_RUNTIME();
+
+"""
+    
     with open("tests/unittest.c", "w") as f:
-        f.write(s)
+        f.write(c)
+        
+    with open("tests/unittest.py", "w") as f:
+        f.write(py)
+        
+    os.system("./tests/unittest.py")
         
 if __name__ == "__main__":
     build()
