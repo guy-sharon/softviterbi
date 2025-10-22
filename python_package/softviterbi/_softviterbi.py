@@ -10,6 +10,7 @@ class SoftViterbi:
         _fields_ = [
             ("num_polys", c_uint8),
             ("polynomes", c_uint32 * MAX_POLYNOMES),
+            ("has_reversed_polys", c_uint8),
             ("poly_lsb_mask", c_uint32),
             ("depth", c_uint32),
             ("depth_mask", c_uint32),
