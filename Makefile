@@ -1,9 +1,14 @@
 CC = gcc
 
+FAST_FLAG = -Ofast
+ifeq ($(UNAME_S),Darwin)
+	FAST_FLAG = -O3 -ffast-math
+endif
+
 ifeq ($(DEBUG), 1)
 	CFLAGS += -march=native -O0 -g
 else
-	CFLAGS += -Wall -march=native -Ofast -Wfatal-errors 
+	CFLAGS += -Wall -march=native $(FAST_FLAG) -Wfatal-errors 
 endif
 
 TARGET = softviterbi
