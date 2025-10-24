@@ -28,7 +28,9 @@ ifeq ($(OS),Windows_NT)
 	EXE = .exe
 	SEP=\\
 	PYTHON_FROM_VENV = $(SEP)Scripts$(SEP)python$(EXE)
-	PYTHON := call $(shell where python3 2>nul || where py -3 2>nul || where python 2>nul || where py 2>nul)
+	where python3 >nul 2>nul && set PYTHON=python3
+	if not defined PYTHON where python >nul 2>nul && set PYTHON=python
+	if not defined PYTHON where py >nul 2>nul && set PYTHON=py -3
 else
 	RM = rm -f
 	RMDIR = rm -rf
