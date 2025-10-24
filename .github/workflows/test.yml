@@ -1,0 +1,55 @@
+name: CI Test (make test_all)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.8", "3.10", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Linux setup (already has make & gcc, but ensure consistency)
+      - name: Ensure build tools (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y build-essential make gcc
+
+      # macOS setup (ensure GNU make if needed)
+      - name: Ensure build tools (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install make || true
+
+      # Windows setup using MSYS2
+      - name: Setup MSYS2 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          install: make gcc
+          update: true
+
+      # Run tests for Linux/macOS
+      - name: Run tests (POSIX)
+        if: runner.os != 'Windows'
+        run: make test_all
+
+      # Run tests for Windows
+      - name: Run tests (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: make test_all
