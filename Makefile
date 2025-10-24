@@ -58,7 +58,7 @@ generate_unittest:
 	-$(RMDIR) $(UNITTEST_VENV)
 	$(PYTHON) -m venv $(UNITTEST_VENV)
 	$(ACTIVATE_UNITTEST_GENERATION_VENV) && pip install -r tests/requirements.txt
-	$(PYTHON) tests/generate_unittest.py
+	$(UNITTEST_VENV)$(PYTHON_FROM_VENV) tests/generate_unittest.py
 
 unittest:
 	$(CC) $(CFLAGS) -DUNITTEST -o $(UNITTEST_TARGET) main.c
@@ -74,14 +74,14 @@ wheel: lib
 	$(MOVE) $(PYTHON_PACKAGE_DIR)$(SEP)*.whl .
 	cd $(PYTHON_PACKAGE_DIR) && rm -rf dist build *.egg-info
 
-test_python_pkg: wheel
+test_python: wheel
 	-$(RMDIR) $(WHEEL_TEST_ENV)
 	$(PYTHON) -m venv $(WHEEL_TEST_ENV)
 	$(ACTIVATE_TEST_VENV) && \
 	$(WHEEL_TEST_ENV)$(PYTHON_FROM_VENV) -m pip install --find-links=. $(TARGET) && \
 	$(WHEEL_TEST_ENV)$(PYTHON_FROM_VENV) tests$(SEP)unittest.py
 
-test_all: test test_python_pkg
+test_all: test test_python
 	@$(MAKE) -s clean >$(DEVNULL) 2>&1
 
 
@@ -89,11 +89,11 @@ help:
 	@echo "softviterbi make commands:"
 	@echo "\tmake\t\t\t\tmakes $(BOLD_TEXT)$(TARGET)$(RESET_TEXT) executable"
 	@echo "\tmake lib\t\t\tmakes $(BOLD_TEXT)$(LIBRARY_TARGET)$(RESET_TEXT)"
-	@echo "\tmake generate_unittest\t\tmakes $(BOLD_TEXT)unittest.c$(RESET_TEXT) (may take a few minutes)"
+	@echo "\tmake generate_unittest\t\tmakes $(BOLD_TEXT)unittest.c$(RESET_TEXT) and $(BOLD_TEXT)unittest.py$(RESET_TEXT) (may take a few minutes)"
 	@echo "\tmake unittest\t\t\tcompiles $(BOLD_TEXT)unittest.c$(RESET_TEXT)"
 	@echo "\tmake test\t\t\truns $(BOLD_TEXT)$(UNITTEST_TARGET)$(RESET_TEXT)"
 	@echo "\tmake wheel\t\t\tmakes $(TARGET) python package's $(BOLD_TEXT)wheel file$(RESET_TEXT)"
-	@echo "\tmake test_python_pkg\t\ttests the python package"
+	@echo "\tmake test_python\t\ttests the python package"
 	@echo "\tmake test_all\t\t\truns all available tests"
 	@echo "\tmake clean\t\t\tcleans extra files"
 	@echo "\tmake help\t\t\tdisplays this message"
