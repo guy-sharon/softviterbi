@@ -28,7 +28,7 @@ ifeq ($(OS),Windows_NT)
 	EXE = .exe
 	SEP=\\
 	PYTHON_FROM_VENV = $(SEP)Scripts$(SEP)python$(EXE)
-	PYTHON := $(shell cmd /C "for %C in (python3 python py) do @where %C >nul 2>nul && (echo %C & exit /b 0)")
+	PYTHON := $(shell cmd /C "for %C in (python3 python py) do @where %C >nul 2>nul && (echo call %C& exit /b 0)")
 else
 	RM = rm -f
 	RMDIR = rm -rf
@@ -74,7 +74,7 @@ wheel: lib
 	$(MOVE) $(LIBRARY_TARGET) $(PYTHON_PACKAGE_LIB)
 	$(PYTHON) -m pip show setuptools >$(DEVNULL) 2>&1 || $(PYTHON) -m pip install setuptools >$(DEVNULL)
 	$(PYTHON) -m pip show wheel >$(DEVNULL) 2>&1 || $(PYTHON) -m pip install wheel >$(DEVNULL)
-	cd $(PYTHON_PACKAGE_DIR) && $(PYTHON) setup.py bdist_wheel -d . >$(DEVNULL)
+	cd $(PYTHON_PACKAGE_DIR) && $(PYTHON) setup.py bdist_wheel -d .
 	-$(RMDIR) build $(TARGET).egg-info
 	$(MOVE) $(PYTHON_PACKAGE_DIR)$(SEP)*.whl .
 	cd $(PYTHON_PACKAGE_DIR) && rm -rf dist build *.egg-info
