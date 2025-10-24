@@ -367,13 +367,13 @@ int unittest()
     
     py = f"""#!tests/venv/bin/python3
 
-from softviterbi import SoftViterbi
+from softviterbi import SoftViterbi # type: ignore
 import time
 
 test_num = 0
 agg_runtime_cnt = 0
 agg_runtime = 0
-t = None
+t = 0
 
 def tic():
     global t
@@ -426,49 +426,49 @@ def encode_decode(polynomes, bits, *_):
     check_results(decoded, bits)
     
 # test encoder
-print("\\nTesting encoder...");
+print("\\nTesting encoder...")
 {py_encodes}
 PRINT_AVG_RUNTIME();
 
 # test decoder
-print("\\nTesting decoder...");
+print("\\nTesting decoder...")
 {py_decodes}
 PRINT_AVG_RUNTIME();
 
 # test encode + decode
-print("\\nTesting encode + decode...");
+print("\\nTesting encode + decode...")
 {py_encode_decodes}
-PRINT_AVG_RUNTIME();
+PRINT_AVG_RUNTIME()
 
 # test decoder (depth=14)
-print("\\nTesting decoder (depth=14)...");
+print("\\nTesting decoder (depth=14)...")
 {py_decodes_14}
-PRINT_AVG_RUNTIME();
+PRINT_AVG_RUNTIME()
 
 # test decoder (depth=18)
-print("\\nTesting decoder (depth=18)...");
+print("\\nTesting decoder (depth=18)...")
 {py_decodes_18}
-PRINT_AVG_RUNTIME();
+PRINT_AVG_RUNTIME()
 
 # test decoder (depth=19)
-print("\\nTesting decoder (depth=19)...");
+print("\\nTesting decoder (depth=19)...")
 {py_decodes_19}
-PRINT_AVG_RUNTIME();
+PRINT_AVG_RUNTIME()
 
 # test decoder (depth=20)
-print("\\nTesting decoder (depth=20)...");
+print("\\nTesting decoder (depth=20)...")
 {py_decodes_20}
-PRINT_AVG_RUNTIME();
+PRINT_AVG_RUNTIME()
 
 # test decoder (depth=21)
-print("\\nTesting decoder (depth=21)...");
+print("\\nTesting decoder (depth=21)...")
 {py_decodes_21}
-PRINT_AVG_RUNTIME();
+PRINT_AVG_RUNTIME()
 
 # test decoder (depth=24)
-print("\\nTesting decoder (depth=24)...");
+print("\\nTesting decoder (depth=24)...")
 {py_decodes_24}
-PRINT_AVG_RUNTIME();
+PRINT_AVG_RUNTIME()
 
 """
     
@@ -477,8 +477,6 @@ PRINT_AVG_RUNTIME();
         
     with open("tests/unittest.py", "w") as f:
         f.write(py)
-        
-    os.system("./tests/unittest.py")
         
 if __name__ == "__main__":
     build()
