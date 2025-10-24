@@ -1,6 +1,5 @@
 CC = gcc
 
-#if debug dont optimize
 ifeq ($(DEBUG), 1)
 	CFLAGS += -march=native -O0 -g
 else
@@ -86,7 +85,7 @@ test_all: test test_python
 
 
 help:
-	@echo "softviterbi make commands:"
+	@echo "$(TARGET) make commands:"
 	@echo "\tmake\t\t\t\tmakes $(BOLD_TEXT)$(TARGET)$(RESET_TEXT) executable"
 	@echo "\tmake lib\t\t\tmakes $(BOLD_TEXT)$(LIBRARY_TARGET)$(RESET_TEXT)"
 	@echo "\tmake generate_unittest\t\tmakes $(BOLD_TEXT)unittest.c$(RESET_TEXT) and $(BOLD_TEXT)unittest.py$(RESET_TEXT) (may take a few minutes)"
