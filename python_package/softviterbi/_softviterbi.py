@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from ctypes import Structure, c_uint8, c_uint32, c_size_t, c_ubyte, POINTER, byref, CDLL, c_char_p
 import importlib.resources
 import platform
@@ -50,7 +50,7 @@ class SoftViterbi:
         result = self.__lib.encode(byref(self.__codec), arr, len(bits))
         return [int(b) for b in result.decode()]
 
-    def decode(self, soft_bits: List[int], final_state: bytes | None = None) -> List[int]:
+    def decode(self, soft_bits: List[int], final_state: Optional[bytes] = None) -> List[int]:
         arr = (c_ubyte * len(soft_bits))(*soft_bits)
         result = self.__lib.decode(byref(self.__codec), arr, len(soft_bits), final_state)
         return [int(b) for b in result.decode()]

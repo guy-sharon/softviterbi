@@ -51,5 +51,7 @@ jobs:
       # Run tests for Windows
       - name: Run tests (Windows)
         if: runner.os == 'Windows'
-        shell: msys2 {0}
-        run: make test_all
+        shell: cmd
+        run: |
+          @echo on
+          make test_all
