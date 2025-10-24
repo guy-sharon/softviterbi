@@ -68,6 +68,7 @@ test: unittest
 wheel: lib
 	$(MOVE) $(LIBRARY_TARGET) $(PYTHON_PACKAGE_LIB)
 	$(PYTHON) -m pip show setuptools >$(DEVNULL) 2>&1 || $(PYTHON) -m pip install setuptools >$(DEVNULL)
+	$(PYTHON) -m pip show wheel >$(DEVNULL) 2>&1 || $(PYTHON) -m pip install wheel >$(DEVNULL)
 	cd $(PYTHON_PACKAGE_DIR) && $(PYTHON) setup.py bdist_wheel -d . >$(DEVNULL)
 	-$(RMDIR) build $(TARGET).egg-info
 	$(MOVE) $(PYTHON_PACKAGE_DIR)$(SEP)*.whl .
