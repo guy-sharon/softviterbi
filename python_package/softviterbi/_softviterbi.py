@@ -45,12 +45,12 @@ class SoftViterbi:
 
         return lib
 
-    def encode(self, bits: list[int]) -> list[int]:
+    def encode(self, bits: List[int]) -> List[int]:
         arr = (c_ubyte * len(bits))(*bits)
         result = self.__lib.encode(byref(self.__codec), arr, len(bits))
         return [int(b) for b in result.decode()]
 
-    def decode(self, soft_bits: list[int], final_state: bytes | None = None) -> list[int]:
+    def decode(self, soft_bits: List[int], final_state: bytes | None = None) -> List[int]:
         arr = (c_ubyte * len(soft_bits))(*soft_bits)
         result = self.__lib.decode(byref(self.__codec), arr, len(soft_bits), final_state)
         return [int(b) for b in result.decode()]
