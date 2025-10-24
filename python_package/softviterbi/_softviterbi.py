@@ -1,3 +1,4 @@
+from typing import List
 from ctypes import Structure, c_uint8, c_uint32, c_size_t, c_ubyte, POINTER, byref, CDLL, c_char_p
 import importlib.resources
 import platform
@@ -17,7 +18,7 @@ class SoftViterbi:
             ("num_states", c_size_t),
         ]
     
-    def __init__(self, polynomes: list[int]):
+    def __init__(self, polynomes: List[int]):
         if not polynomes:
             raise ValueError("At least one polynomial is required")
 
