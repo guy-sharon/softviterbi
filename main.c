@@ -6,7 +6,6 @@
 #include <string.h>
 #include <assert.h>
 #include "limits.h"
-#include "immintrin.h"
 #include "main.h"
 
 #ifdef UNITTEST
