@@ -28,7 +28,7 @@ ifeq ($(OS),Windows_NT)
 	EXE = .exe
 	SEP=\\
 	PYTHON_FROM_VENV = $(SEP)Scripts$(SEP)python$(EXE)
-	PYTHON := $(shell cmd /C "for %C in (python3 python py) do @where %C >nul 2>nul && (echo call %C& exit /b 0)")
+	PYTHON := $(shell cmd /C "for %C in (python python3 py) do @where %C >nul 2>nul && (echo call %C& exit /b 0)")
 else
 	RM = rm -f
 	RMDIR = rm -rf
